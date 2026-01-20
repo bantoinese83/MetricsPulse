@@ -14,7 +14,7 @@ interface MetricsChartProps {
 }
 
 export function MetricsChart({ data, metric }: MetricsChartProps) {
-  const formatValue = (value: number) => {
+  const formatValue = (value: number): string => {
     switch (metric) {
       case 'mrr':
       case 'ltv':
@@ -29,7 +29,7 @@ export function MetricsChart({ data, metric }: MetricsChartProps) {
       case 'active_customers':
         return value.toLocaleString()
       default:
-        return value
+        return value.toString()
     }
   }
 
@@ -59,7 +59,10 @@ export function MetricsChart({ data, metric }: MetricsChartProps) {
           />
           <Tooltip
             labelFormatter={(date) => new Date(date).toLocaleDateString()}
-            formatter={(value: number) => [formatValue(value), getMetricLabel()]}
+            formatter={(value) => {
+              if (value === undefined || typeof value !== 'number') return ['N/A', getMetricLabel()]
+              return [formatValue(value), getMetricLabel()]
+            }}
           />
           <Line
             type="monotone"

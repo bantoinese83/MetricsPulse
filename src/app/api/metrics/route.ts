@@ -3,7 +3,7 @@ import { createServerComponentClient } from '@/lib/supabase-server'
 import Stripe from 'stripe'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-12-18.acacia'
+  apiVersion: '2025-12-15.clover'
 })
 
 // GET /api/metrics - Fetch metrics for user's workspace
@@ -121,7 +121,7 @@ async function calculateMetricsFromStripe(workspaceId: string, supabase: any) {
 
     // Create Stripe client with connected account
     const connectedStripe = new Stripe(connection.access_token, {
-      apiVersion: '2024-12-18.acacia'
+      apiVersion: '2025-12-15.clover'
     })
 
     // Get subscriptions for MRR calculation
