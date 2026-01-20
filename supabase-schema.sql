@@ -152,17 +152,23 @@ CREATE INDEX idx_metrics_recorded_at ON metrics(recorded_at DESC);
 CREATE INDEX idx_alert_thresholds_workspace_id ON alert_thresholds(workspace_id);
 CREATE INDEX idx_subscriptions_user_id ON subscriptions(user_id);
 
--- Insert a sample workspace trigger function
-CREATE OR REPLACE FUNCTION create_workspace_for_new_user()
+-- Function to handle new user signup
+CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
+  -- Insert into our custom users table
+  INSERT INTO users (id, email)
+  VALUES (NEW.id, NEW.email);
+
+  -- Create a default workspace for the new user
   INSERT INTO workspaces (user_id, name)
   VALUES (NEW.id, 'My Workspace');
+
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Create trigger to automatically create workspace for new users
+-- Create trigger to automatically create user record and workspace for new users
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION create_workspace_for_new_user();
+  FOR EACH ROW EXECUTE FUNCTION handle_new_user();

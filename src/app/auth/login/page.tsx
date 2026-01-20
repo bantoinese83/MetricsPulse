@@ -84,6 +84,7 @@ export default function LoginPage() {
                   if (emailError) setEmailError('')
                 }}
                 className={emailError ? 'border-red-500' : ''}
+                autoComplete="email"
                 required
               />
               {emailError && (
@@ -103,6 +104,7 @@ export default function LoginPage() {
                   if (passwordError) setPasswordError('')
                 }}
                 className={passwordError ? 'border-red-500' : ''}
+                autoComplete="current-password"
                 required
               />
               {passwordError && (
