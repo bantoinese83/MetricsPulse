@@ -156,7 +156,9 @@ export function useNetworkStatus(): NetworkStatusHook {
       updateConnectionInfo()
 
       return () => {
-        navigatorExt.connection.removeEventListener('change', handleConnectionChange)
+        if (navigatorExt.connection) {
+          navigatorExt.connection.removeEventListener('change', handleConnectionChange)
+        }
       }
     }
 

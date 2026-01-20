@@ -282,10 +282,11 @@ export async function POST(request: NextRequest) {
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString()
     const { data: recentMetrics, error: recentError } = await supabase
       .from('metrics')
-      .select('id')
+      .select('id, recorded_at')
       .eq('workspace_id', workspace.id)
       .gte('recorded_at', fiveMinutesAgo)
       .limit(1)
+      .order('recorded_at', { ascending: false })
 
     if (recentError) {
       logError(handleApiError(recentError), {

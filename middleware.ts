@@ -72,9 +72,9 @@ function isSuspiciousRequest(request: NextRequest): boolean {
 }
 
 function getClientIdentifier(request: NextRequest): string {
-  // Use IP address for rate limiting (in production, use a more sophisticated method)
+  // Use forwarded IP for rate limiting (in production, use a more sophisticated method)
   const forwarded = request.headers.get('x-forwarded-for')
-  const ip = forwarded ? forwarded.split(',')[0].trim() : request.ip || 'unknown'
+  const ip = forwarded ? forwarded.split(',')[0].trim() : 'unknown'
 
   // Add user agent to make it more unique
   const userAgent = request.headers.get('user-agent') || 'unknown'

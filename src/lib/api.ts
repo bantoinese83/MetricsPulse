@@ -134,11 +134,11 @@ async function apiRequest<T>(
 
     // Add request ID for tracking
     const requestId = Math.random().toString(36).substring(7)
-    const headers = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       'X-Request-ID': requestId,
       'X-Client-Version': process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0',
-      ...options.headers,
+      ...(options.headers as Record<string, string>),
     }
 
     // Add cache control headers

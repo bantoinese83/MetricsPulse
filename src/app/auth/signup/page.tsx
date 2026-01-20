@@ -37,9 +37,9 @@ export default function SignupPage() {
     }
 
     try {
-      const { error } = await signUp(email, password)
-      if (error) {
-        setError(error.message)
+      const result = await signUp(email, password)
+      if (!result.success) {
+        setError(result.error || 'Failed to create account')
       } else {
         setSuccess(true)
         // Redirect to login after a short delay

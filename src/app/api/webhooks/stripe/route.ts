@@ -338,39 +338,6 @@ async function handlePriceEvent(supabase: any, price: any, eventType: string) {
   }
 }
 
-async function recalculateMetrics(supabase: any, eventData: any) {
-  try {
-    // Find workspace for this event
-    let workspaceId: string | null = null
-
-    // Try to find workspace by various methods
-    if (eventData.customer) {
-      const { data: connection } = await supabase
-        .from('connections')
-        .select('workspace_id')
-        .eq('provider', 'stripe')
-        .eq('metadata->>stripe_user_id', eventData.customer)
-        .single()
-
-      workspaceId = connection?.workspace_id
-    }
-
-    if (!workspaceId) {
-      console.warn('Could not determine workspace for metric recalculation')
-      return
-    }
-
-    // Trigger metric calculation (this would call your existing metric calculation logic)
-    console.log(`Triggering metric recalculation for workspace: ${workspaceId}`)
-
-    // You could call an internal API endpoint here or run the calculation directly
-    // For now, we'll just log it
-
-  } catch (error) {
-    console.error('Error recalculating metrics:', error)
-    // Don't throw here - metric recalculation failures shouldn't break webhook processing
-  }
-}
 
 function mapStripeStatus(stripeStatus: string): string {
   const statusMap: Record<string, string> = {
