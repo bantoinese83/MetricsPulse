@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { metricsApi, stripeApi, workspaceApi, isApiSuccess } from './api'
 import { Metric, Workspace, MetricName, LoadingState } from './types'
+export { useNetworkStatus, useOfflineHandler, useOptimisticUpdate } from './hooks/use-network-status'
 
 // Custom hooks for data fetching and state management
 

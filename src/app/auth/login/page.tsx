@@ -8,31 +8,49 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { AlertCircle } from 'lucide-react'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [emailError, setEmailError] = useState('')
+  const [passwordError, setPasswordError] = useState('')
+  const [generalError, setGeneralError] = useState('')
   const { signIn } = useAuth()
   const router = useRouter()
 
+  const validateEmail = (value: string) => {
+    if (!value) return 'Email is required'
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Please enter a valid email'
+    return ''
+  }
+
+  const validatePassword = (value: string) => {
+    if (!value) return 'Password is required'
+    return ''
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
-    setError('')
+    setGeneralError('')
+
+    const emailErr = validateEmail(email)
+    const passwordErr = validatePassword(password)
+
+    setEmailError(emailErr)
+    setPasswordError(passwordErr)
+
+    if (emailErr || passwordErr) return
 
     try {
-      const { error } = await signIn(email, password)
+      const { error } = await signIn(email.trim().toLowerCase(), password)
       if (error) {
-        setError(error.message)
+        setGeneralError(error)
       } else {
         router.push('/dashboard')
       }
     } catch (err) {
-      setError('An unexpected error occurred')
-    } finally {
-      setLoading(false)
+      setGeneralError('An unexpected error occurred. Please try again.')
     }
   }
 
@@ -47,9 +65,10 @@ export default function LoginPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
-                {error}
+            {generalError && (
+              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm flex items-center gap-2">
+                <AlertCircle className="h-4 w-4" />
+                {generalError}
               </div>
             )}
 
@@ -60,9 +79,16 @@ export default function LoginPage() {
                 type="email"
                 placeholder="your@email.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value)
+                  if (emailError) setEmailError('')
+                }}
+                className={emailError ? 'border-red-500' : ''}
                 required
               />
+              {emailError && (
+                <p className="text-sm text-red-600">{emailError}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -70,14 +96,22 @@ export default function LoginPage() {
               <Input
                 id="password"
                 type="password"
+                placeholder="Enter your password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value)
+                  if (passwordError) setPasswordError('')
+                }}
+                className={passwordError ? 'border-red-500' : ''}
                 required
               />
+              {passwordError && (
+                <p className="text-sm text-red-600">{passwordError}</p>
+              )}
             </div>
 
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Signing in...' : 'Sign in'}
+            <Button type="submit" className="w-full">
+              Sign in
             </Button>
           </form>
 
