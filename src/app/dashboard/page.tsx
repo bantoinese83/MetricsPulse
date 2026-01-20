@@ -1,82 +1,73 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { MetricCard } from '@/components/dashboard/metric-card'
 import { MetricsChart } from '@/components/dashboard/metrics-chart'
 import { StripeConnection } from '@/components/dashboard/stripe-connection'
-
-interface Metric {
-  id: string
-  metric_name: string
-  value: number
-  recorded_at: string
-}
+import { useMetrics, useMetricsCalculations, useChartData, useCalculateMetrics } from '@/lib/hooks'
+import { Loading, DashboardSkeleton } from '@/components/loading'
+import { Metric } from '@/lib/types'
 
 export default function DashboardPage() {
   const { user, signOut } = useAuth()
-  const [metrics, setMetrics] = useState<Metric[]>([])
-  const [loading, setLoading] = useState(true)
+
+  // Use React Query hooks for data fetching
+  const { data: metrics = [], isLoading, error } = useMetrics(undefined, 30)
+  const calculateMetrics = useCalculateMetrics()
+
+  // Use custom hooks for calculations
+  const { mrr, churnRate, ltv, activeCustomers, mrrChange, churnChange } = useMetricsCalculations(metrics)
+  const chartData = useChartData(metrics)
 
   const handleSignOut = async () => {
     await signOut()
   }
 
-  useEffect(() => {
-    fetchMetrics()
-  }, [])
-
-  const fetchMetrics = async () => {
-    try {
-      const response = await fetch('/api/metrics?days=30')
-      if (response.ok) {
-        const data = await response.json()
-        setMetrics(data.metrics || [])
-      }
-    } catch (error) {
-      console.error('Failed to fetch metrics:', error)
-    } finally {
-      setLoading(false)
-    }
+  const handleCalculateMetrics = () => {
+    calculateMetrics.mutate()
   }
 
-  // Calculate current values and changes
-  const getLatestMetric = (metricName: string) => {
-    const metricData = metrics.filter(m => m.metric_name === metricName)
-    return metricData[metricData.length - 1]
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <header className="bg-white shadow">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center py-6">
+              <div className="flex items-center">
+                <h1 className="text-2xl font-bold text-gray-900">MetricsPulse</h1>
+              </div>
+            </div>
+          </div>
+        </header>
+        <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+          <div className="px-4 py-6 sm:px-0">
+            <DashboardSkeleton />
+          </div>
+        </main>
+      </div>
+    )
   }
 
-  const getPreviousMetric = (metricName: string) => {
-    const metricData = metrics.filter(m => m.metric_name === metricName)
-    return metricData[metricData.length - 2]
+  // Show error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <p className="text-red-600 mb-4">Failed to load dashboard data</p>
+              <Button onClick={() => window.location.reload()}>
+                Try Again
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
-
-  const calculateChange = (current: number, previous: number) => {
-    if (!previous) return 0
-    return ((current - previous) / previous) * 100
-  }
-
-  const mrr = getLatestMetric('mrr')
-  const churnRate = getLatestMetric('churn_rate')
-  const ltv = getLatestMetric('ltv')
-  const activeCustomers = getLatestMetric('active_customers')
-
-  const mrrChange = calculateChange(mrr?.value || 0, getPreviousMetric('mrr')?.value || 0)
-  const churnChange = calculateChange(churnRate?.value || 0, getPreviousMetric('churn_rate')?.value || 0)
-
-  // Prepare chart data
-  const chartData = metrics.reduce((acc, metric) => {
-    const date = new Date(metric.recorded_at).toISOString().split('T')[0]
-    const existing = acc.find(item => item.date === date)
-    if (existing) {
-      existing[metric.metric_name] = metric.value
-    } else {
-      acc.push({ date, [metric.metric_name]: metric.value })
-    }
-    return acc
-  }, [] as any[])
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -168,7 +159,7 @@ export default function DashboardPage() {
           )}
 
           {/* Empty State */}
-          {metrics.length === 0 && !loading && (
+          {metrics.length === 0 && !isLoading && (
             <Card>
               <CardHeader>
                 <CardTitle>No Metrics Yet</CardTitle>

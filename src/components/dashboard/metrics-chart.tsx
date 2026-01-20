@@ -3,14 +3,8 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 
 interface MetricsChartProps {
-  data: Array<{
-    date: string
-    mrr?: number
-    churn_rate?: number
-    ltv?: number
-    active_customers?: number
-  }>
-  metric: 'mrr' | 'churn_rate' | 'ltv' | 'active_customers'
+  data: Array<Record<string, any>>
+  metric: string
 }
 
 export function MetricsChart({ data, metric }: MetricsChartProps) {

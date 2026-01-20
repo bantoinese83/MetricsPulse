@@ -1,53 +1,31 @@
 'use client'
 
-import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { useAuth } from '@/lib/auth'
-import { CreditCard, RefreshCw } from 'lucide-react'
+import { useStripeConnection, useCalculateMetrics } from '@/lib/hooks'
+import { CreditCard, RefreshCw, AlertCircle } from 'lucide-react'
+import { useWorkspace } from '@/lib/hooks'
 
 export function StripeConnection() {
   const { user } = useAuth()
-  const [isConnecting, setIsConnecting] = useState(false)
-  const [isCalculating, setIsCalculating] = useState(false)
-  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'loading'>('loading')
+  const { data: workspace } = useWorkspace()
+  const { connectStripe, isConnecting, error: connectionError } = useStripeConnection()
+  const calculateMetrics = useCalculateMetrics()
 
-  const connectStripe = async () => {
-    if (!user) return
-
-    setIsConnecting(true)
-    try {
-      const response = await fetch(`/api/connections/stripe?user_id=${user.id}`)
-      const { url } = await response.json()
-
-      if (url) {
-        window.location.href = url
-      }
-    } catch (error) {
-      console.error('Failed to connect Stripe:', error)
-    } finally {
-      setIsConnecting(false)
+  const handleConnectStripe = () => {
+    if (user?.id) {
+      connectStripe(user.id)
     }
   }
 
-  const calculateMetrics = async () => {
-    setIsCalculating(true)
-    try {
-      const response = await fetch('/api/metrics', {
-        method: 'POST',
-      })
-
-      if (response.ok) {
-        // Refresh the page to show new metrics
-        window.location.reload()
-      }
-    } catch (error) {
-      console.error('Failed to calculate metrics:', error)
-    } finally {
-      setIsCalculating(false)
-    }
+  const handleCalculateMetrics = () => {
+    calculateMetrics.mutate()
   }
+
+  // Check if Stripe is connected (simplified - you might want to query connections)
+  const isConnected = workspace?.connections?.some(c => c.provider === 'stripe') || false
 
   return (
     <Card>
@@ -61,19 +39,28 @@ export function StripeConnection() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {(connectionError || calculateMetrics.isError) && (
+          <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-md">
+            <AlertCircle className="h-4 w-4 text-red-600" />
+            <p className="text-sm text-red-700">
+              {connectionError || 'Failed to calculate metrics'}
+            </p>
+          </div>
+        )}
+
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-sm">Status:</span>
-            <Badge variant={connectionStatus === 'connected' ? 'default' : 'secondary'}>
-              {connectionStatus === 'connected' ? 'Connected' : 'Not Connected'}
+            <Badge variant={isConnected ? 'default' : 'secondary'}>
+              {isConnected ? 'Connected' : 'Not Connected'}
             </Badge>
           </div>
         </div>
 
         <div className="flex gap-2">
           <Button
-            onClick={connectStripe}
-            disabled={isConnecting || connectionStatus === 'connected'}
+            onClick={handleConnectStripe}
+            disabled={isConnecting || isConnected}
             variant="outline"
           >
             {isConnecting ? (
@@ -81,20 +68,20 @@ export function StripeConnection() {
                 <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
                 Connecting...
               </>
-            ) : connectionStatus === 'connected' ? (
+            ) : isConnected ? (
               'Connected'
             ) : (
               'Connect Stripe'
             )}
           </Button>
 
-          {connectionStatus === 'connected' && (
+          {isConnected && (
             <Button
-              onClick={calculateMetrics}
-              disabled={isCalculating}
+              onClick={handleCalculateMetrics}
+              disabled={calculateMetrics.isPending}
               variant="default"
             >
-              {isCalculating ? (
+              {calculateMetrics.isPending ? (
                 <>
                   <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
                   Calculating...
@@ -106,7 +93,7 @@ export function StripeConnection() {
           )}
         </div>
 
-        <div className="text-xs text-gray-500">
+        <div className="text-xs text-gray-500 space-y-1">
           <p>⚠️ <strong>Note:</strong> You'll need to set up Stripe Connect in your Stripe dashboard first.</p>
           <p>This requires a Stripe account with Connect enabled.</p>
         </div>
