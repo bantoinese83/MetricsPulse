@@ -6,16 +6,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { MetricCard } from '@/components/dashboard/metric-card'
 import { MetricsChart } from '@/components/dashboard/metrics-chart'
 import { StripeConnection } from '@/components/dashboard/stripe-connection'
-import { useMetrics, useMetricsCalculations, useChartData, useCalculateMetrics } from '@/lib/hooks'
-import { Loading, DashboardSkeleton } from '@/components/loading'
-import { Metric } from '@/lib/types'
+import { useMetrics, useMetricsCalculations, useChartData } from '@/lib/hooks'
+import { DashboardSkeleton } from '@/components/loading'
 
 export default function DashboardPage() {
   const { user, signOut } = useAuth()
 
   // Use React Query hooks for data fetching
   const { data: metrics = [], isLoading, error } = useMetrics(undefined, 30)
-  const calculateMetrics = useCalculateMetrics()
 
   // Use custom hooks for calculations
   const { mrr, churnRate, ltv, activeCustomers, mrrChange, churnChange } = useMetricsCalculations(metrics)
@@ -25,9 +23,6 @@ export default function DashboardPage() {
     await signOut()
   }
 
-  const handleCalculateMetrics = () => {
-    calculateMetrics.mutate()
-  }
 
   // Show loading state
   if (isLoading) {
@@ -169,7 +164,7 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-gray-600">
-                  Once you connect Stripe and calculate metrics, you'll see your MRR, churn rate,
+                  Once you connect Stripe and calculate metrics, you&apos;ll see your MRR, churn rate,
                   LTV, and other key SaaS metrics displayed here with beautiful charts and trends.
                 </p>
               </CardContent>

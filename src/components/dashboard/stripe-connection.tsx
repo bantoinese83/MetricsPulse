@@ -94,7 +94,7 @@ export function StripeConnection() {
         </div>
 
         <div className="text-xs text-gray-500 space-y-1">
-          <p>⚠️ <strong>Note:</strong> You'll need to set up Stripe Connect in your Stripe dashboard first.</p>
+          <p>⚠️ <strong>Note:</strong> You&apos;ll need to set up Stripe Connect in your Stripe dashboard first.</p>
           <p>This requires a Stripe account with Connect enabled.</p>
         </div>
       </CardContent>

@@ -50,7 +50,7 @@ export default function Home() {
             <span className="text-blue-600">One Dashboard</span>
           </h1>
           <p className="text-xl text-gray-600 mb-8">
-            MetricsPulse answers: <strong>"What are my 3 numbers TODAY that tell me if my SaaS is healthy?"</strong>
+            MetricsPulse answers: <strong>&ldquo;What are my 3 numbers TODAY that tell me if my SaaS is healthy?&rdquo;</strong>
           </p>
 
           {/* Key Metrics Preview */}
@@ -123,7 +123,7 @@ export default function Home() {
                 <CardTitle>💰 Built for Founders</CardTitle>
               </CardHeader>
               <CardContent>
-                <p>$39/month vs competitors' $99+. Built by founders who understand what really matters.</p>
+                <p>$39/month vs competitors&apos; $99+. Built by founders who understand what really matters.</p>
               </CardContent>
             </Card>
           </div>

@@ -4,13 +4,13 @@ import { AppError } from './types'
 export class MetricsPulseError extends Error implements AppError {
   code: string
   statusCode: number
-  details?: Record<string, any>
+  details?: Record<string, unknown>
 
   constructor(
     message: string,
     code: string = 'INTERNAL_ERROR',
     statusCode: number = 500,
-    details?: Record<string, any>
+    details?: Record<string, unknown>
   ) {
     super(message)
     this.name = 'MetricsPulseError'
@@ -33,7 +33,7 @@ export class AuthorizationError extends MetricsPulseError {
 }
 
 export class ValidationError extends MetricsPulseError {
-  constructor(message: string, details?: Record<string, any>) {
+  constructor(message: string, details?: Record<string, unknown>) {
     super(message, 'VALIDATION_ERROR', 400, details)
   }
 }
@@ -77,7 +77,7 @@ export function handleApiError(error: unknown): AppError {
   return new MetricsPulseError('An unexpected error occurred', 'INTERNAL_ERROR', 500)
 }
 
-export function logError(error: AppError, context?: Record<string, any>) {
+export function logError(error: AppError, context?: Record<string, unknown>) {
   const logData = {
     code: error.code,
     message: error.message,

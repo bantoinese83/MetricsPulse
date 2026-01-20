@@ -28,15 +28,13 @@ export interface UseFormValidationOptions {
   validateOnSubmit?: boolean
 }
 
-export function useFormValidation<T extends Record<string, any>>(
+export function useFormValidation<T extends Record<string, unknown>>(
   initialValues: T,
   validationRules: Record<keyof T, ValidationRule[]>,
   options: UseFormValidationOptions = {}
 ) {
   const {
     validateOnChange = true,
-    validateOnBlur = true,
-    validateOnSubmit = true,
   } = options
 
   const [values, setValues] = useState<T>(initialValues)
@@ -44,7 +42,7 @@ export function useFormValidation<T extends Record<string, any>>(
   const [submitted, setSubmitted] = useState(false)
 
   // Validate a single field
-  const validateField = useCallback((fieldName: keyof T, value: any = values[fieldName]) => {
+  const validateField = useCallback((fieldName: keyof T, value: T[keyof T] = values[fieldName]) => {
     const rules = validationRules[fieldName]
     if (!rules) return { error: undefined, warning: undefined }
 
@@ -76,7 +74,7 @@ export function useFormValidation<T extends Record<string, any>>(
   }, [validateField, validationRules])
 
   // Update field value
-  const setFieldValue = useCallback((fieldName: keyof T, value: any) => {
+  const setFieldValue = useCallback((fieldName: keyof T, value: T[keyof T]) => {
     setValues(prev => ({ ...prev, [fieldName]: value }))
 
     if (validateOnChange) {
@@ -91,7 +89,7 @@ export function useFormValidation<T extends Record<string, any>>(
   }, [])
 
   // Handle field change
-  const handleFieldChange = useCallback((fieldName: keyof T, value: any) => {
+  const handleFieldChange = useCallback((fieldName: keyof T, value: T[keyof T]) => {
     setFieldValue(fieldName, value)
   }, [setFieldValue])
 
@@ -145,7 +143,7 @@ export function useFormValidation<T extends Record<string, any>>(
   const getFieldProps = useCallback((fieldName: keyof T) => ({
     value: values[fieldName],
     onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
-      handleFieldChange(fieldName, e.target.value),
+      handleFieldChange(fieldName, e.target.value as T[keyof T]),
     onBlur: () => handleFieldBlur(fieldName),
     error: getFieldError(fieldName),
   }), [values, handleFieldChange, handleFieldBlur, getFieldError])
@@ -253,7 +251,7 @@ export const validationRules = {
 
 // Specialized hooks for common forms
 export function useLoginForm(onSubmit: (data: { email: string; password: string }) => void | Promise<void>) {
-  return useFormValidation(
+  const form = useFormValidation(
     { email: '', password: '' },
     {
       email: [validationRules.required(), validationRules.email()],
@@ -261,10 +259,16 @@ export function useLoginForm(onSubmit: (data: { email: string; password: string 
     },
     { validateOnChange: true, validateOnBlur: true }
   )
+
+  const handleSubmit = useCallback(() => {
+    form.handleSubmit(onSubmit)
+  }, [form, onSubmit])
+
+  return { ...form, handleSubmit }
 }
 
 export function useSignupForm(onSubmit: (data: { email: string; password: string; confirmPassword: string }) => void | Promise<void>) {
-  return useFormValidation(
+  const form = useFormValidation(
     { email: '', password: '', confirmPassword: '' },
     {
       email: [validationRules.required(), validationRules.email()],
@@ -273,14 +277,26 @@ export function useSignupForm(onSubmit: (data: { email: string; password: string
     },
     { validateOnChange: true, validateOnBlur: true }
   )
+
+  const handleSubmit = useCallback(() => {
+    form.handleSubmit(onSubmit)
+  }, [form, onSubmit])
+
+  return { ...form, handleSubmit }
 }
 
 export function useWorkspaceForm(onSubmit: (data: { name: string }) => void | Promise<void>) {
-  return useFormValidation(
+  const form = useFormValidation(
     { name: '' },
     {
       name: [validationRules.required(), validationRules.minLength(2), validationRules.maxLength(50)],
     },
     { validateOnChange: true, validateOnBlur: true }
   )
+
+  const handleSubmit = useCallback(() => {
+    form.handleSubmit(onSubmit)
+  }, [form, onSubmit])
+
+  return { ...form, handleSubmit }
 }

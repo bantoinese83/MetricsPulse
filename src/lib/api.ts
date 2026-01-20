@@ -1,4 +1,4 @@
-import { ApiResponse, MetricsResponse, Metric, Workspace } from './types'
+import { ApiResponse, Metric, Workspace } from './types'
 import { handleApiError, createSuccessResponse, createErrorResponse, logError } from './errors'
 import { isProduction } from './config'
 
@@ -203,7 +203,7 @@ async function apiRequest<T>(
         }
 
         throw new Error(errorMessage)
-      } catch (parseError) {
+      } catch {
         // If we can't parse the error response, use status text
         throw new Error(response.statusText || errorMessage)
       }

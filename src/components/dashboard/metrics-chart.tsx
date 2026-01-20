@@ -3,7 +3,7 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 
 interface MetricsChartProps {
-  data: Array<Record<string, any>>
+  data: Array<Record<string, unknown>>
   metric: string
 }
 

@@ -95,9 +95,9 @@ export async function POST(request: NextRequest) {
         }
       }
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Webhook signature verification failed:', {
-        error: err.message,
+        error: err instanceof Error ? err.message : String(err),
         eventId: eventId,
         signature: sig.substring(0, 50) + '...',
       })
@@ -192,7 +192,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function processWebhookEvent(supabase: any, event: Stripe.Event) {
+async function processWebhookEvent(supabase: Awaited<ReturnType<typeof createServerComponentClient>>, event: Stripe.Event) {
   const eventData = event.data.object as any
 
   // Validate event data structure
@@ -206,25 +206,25 @@ async function processWebhookEvent(supabase: any, event: Stripe.Event) {
     case 'customer.subscription.deleted':
     case 'customer.subscription.paused':
     case 'customer.subscription.resumed':
-      await handleSubscriptionEvent(supabase, eventData, event.type)
+      await handleSubscriptionEvent(supabase, eventData)
       break
 
     case 'invoice.payment_succeeded':
     case 'invoice.payment_failed':
     case 'invoice.finalized':
-      await handleInvoiceEvent(supabase, eventData, event.type)
+      await handleInvoiceEvent(supabase, event.data.object as Stripe.Invoice, event.type)
       break
 
     case 'customer.created':
     case 'customer.updated':
     case 'customer.deleted':
-      await handleCustomerEvent(supabase, eventData, event.type)
+      await handleCustomerEvent(supabase, event.data.object as Stripe.Customer, event.type)
       break
 
     case 'price.created':
     case 'price.updated':
     case 'price.deleted':
-      await handlePriceEvent(supabase, eventData, event.type)
+      await handlePriceEvent(supabase, event.data.object as Stripe.Price, event.type)
       break
 
     default:
@@ -241,7 +241,7 @@ async function processWebhookEvent(supabase: any, event: Stripe.Event) {
   }
 }
 
-async function handleSubscriptionEvent(supabase: any, subscription: any, eventType: string) {
+async function handleSubscriptionEvent(supabase: Awaited<ReturnType<typeof createServerComponentClient>>, subscription: Stripe.Subscription) {
   try {
     // Validate subscription data
     if (!subscription.id || !subscription.customer) {
@@ -268,7 +268,7 @@ async function handleSubscriptionEvent(supabase: any, subscription: any, eventTy
         user_id: subscription.customer, // This should be mapped properly
         stripe_subscription_id: subscription.id,
         status: mapStripeStatus(subscription.status),
-        current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+        current_period_end: (subscription as any).current_period_end ? new Date((subscription as any).current_period_end * 1000).toISOString() : null,
       })
 
     if (upsertError) {
@@ -281,7 +281,7 @@ async function handleSubscriptionEvent(supabase: any, subscription: any, eventTy
   }
 }
 
-async function handleInvoiceEvent(supabase: any, invoice: any, eventType: string) {
+async function handleInvoiceEvent(supabase: Awaited<ReturnType<typeof createServerComponentClient>>, invoice: Stripe.Invoice, eventType: string) {
   try {
     // Validate invoice data
     if (!invoice.id || !invoice.customer) {
@@ -301,7 +301,7 @@ async function handleInvoiceEvent(supabase: any, invoice: any, eventType: string
   }
 }
 
-async function handleCustomerEvent(supabase: any, customer: any, eventType: string) {
+async function handleCustomerEvent(supabase: Awaited<ReturnType<typeof createServerComponentClient>>, customer: Stripe.Customer, eventType: string) {
   try {
     // Validate customer data
     if (!customer.id) {
@@ -319,7 +319,7 @@ async function handleCustomerEvent(supabase: any, customer: any, eventType: stri
   }
 }
 
-async function handlePriceEvent(supabase: any, price: any, eventType: string) {
+async function handlePriceEvent(supabase: Awaited<ReturnType<typeof createServerComponentClient>>, price: Stripe.Price, eventType: string) {
   try {
     // Validate price data
     if (!price.id) {
@@ -353,11 +353,9 @@ function mapStripeStatus(stripeStatus: string): string {
   return statusMap[stripeStatus] || 'unknown'
 }
 
-async function recalculateMetrics(supabase: any, eventData: any) {
+async function recalculateMetrics(supabase: Awaited<ReturnType<typeof createServerComponentClient>>, eventData: Record<string, unknown>) {
   try {
     // Find workspace with this Stripe account
-    const stripeAccountId = eventData.customer // or however we link it
-
     // For now, we'll need to implement logic to find the workspace
     // based on the Stripe customer/account ID
 

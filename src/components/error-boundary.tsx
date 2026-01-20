@@ -202,7 +202,7 @@ function DefaultErrorFallback({
 
   // Determine error type and appropriate actions
   const isNetworkError = error.message.includes('fetch') || error.message.includes('network')
-  const isAuthError = error.message.includes('auth') || error.message.includes('unauthorized')
+  // Check if this is an auth error (logic removed as unused)
   const canRetry = retryCount < maxRetries
 
   return (
@@ -366,7 +366,7 @@ export function AsyncErrorBoundary({
 }) {
   return (
     <React.Suspense fallback={<div>Loading...</div>}>
-      <ErrorBoundary fallback={fallback}>
+      <ErrorBoundary fallback={fallback as any}>
         {children}
       </ErrorBoundary>
     </React.Suspense>

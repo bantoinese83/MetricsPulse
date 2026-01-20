@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { metricsApi, stripeApi, workspaceApi, isApiSuccess } from './api'
-import { Metric, Workspace, MetricName, LoadingState } from './types'
+import { Metric, MetricName, LoadingState } from './types'
 export { useNetworkStatus, useOfflineHandler, useOptimisticUpdate } from './hooks/use-network-status'
 
 // Custom hooks for data fetching and state management
@@ -82,7 +82,7 @@ export function useStripeConnection() {
       } else {
         setError(response.error || 'Failed to connect Stripe')
       }
-    } catch (err) {
+    } catch {
       setError('Failed to initiate Stripe connection')
     } finally {
       setIsConnecting(false)
@@ -179,10 +179,14 @@ export function useDebounce<T>(value: T, delay: number): T {
 // Previous value hook for comparisons
 export function usePrevious<T>(value: T): T | undefined {
   const ref = useRef<T | undefined>(undefined)
+  const [previousValue, setPreviousValue] = useState<T | undefined>(undefined)
+
   useEffect(() => {
+    setPreviousValue(ref.current)
     ref.current = value
-  })
-  return ref.current
+  }, [value])
+
+  return previousValue
 }
 
 // Online status hook
@@ -262,6 +266,6 @@ export function useChartData(metrics: Metric[]) {
         acc.push({ date, [metric.metricName]: metric.value })
       }
       return acc
-    }, [] as Array<Record<string, any>>)
+    }, [] as Array<Record<string, unknown>>)
   }, [metrics])
 }

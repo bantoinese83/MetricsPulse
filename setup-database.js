@@ -5,9 +5,8 @@
  * Run this after setting up your Supabase project and .env.local file
  */
 
-const { execSync } = require('child_process');
-const fs = require('fs');
-const path = require('path');
+import { execSync } from 'child_process';
+import fs from 'fs';
 
 console.log('🚀 Setting up MetricsPulse database...\n');
 

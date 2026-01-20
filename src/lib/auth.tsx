@@ -222,7 +222,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       updateState({ loading: true, error: null })
 
-      const result = await retryOperation(async () => {
+      await retryOperation(async () => {
         const { data, error } = await supabase.auth.signInWithPassword({
           email: email.trim().toLowerCase(),
           password,

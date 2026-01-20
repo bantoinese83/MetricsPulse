@@ -26,7 +26,7 @@ export interface Connection {
   refreshToken: string | null
   connectedAt: Date | null
   expiresAt: Date | null
-  metadata: Record<string, any> | null
+  metadata: Record<string, unknown> | null
   workspace: Workspace
 }
 
@@ -85,7 +85,7 @@ export type SubscriptionStatus =
 export type MetricStatus = 'healthy' | 'warning' | 'danger' | 'neutral'
 
 // API Response Types
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean
   data?: T
   error?: string
@@ -140,7 +140,7 @@ export interface AppError {
   code: string
   message: string
   statusCode?: number
-  details?: Record<string, any>
+  details?: Record<string, unknown>
 }
 
 // Environment Configuration
@@ -200,7 +200,7 @@ export interface StripeWebhookEvent {
   id: string
   type: string
   data: {
-    object: any
+    object: Record<string, unknown>
   }
   created: number
 }

@@ -2,13 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerComponentClient } from '@/lib/supabase-server'
 import Stripe from 'stripe'
 import { handleApiError, logError, MetricsPulseError } from '@/lib/errors'
-import { config } from '@/lib/config'
-
-const stripe = new Stripe(config.stripe.secretKey, {
-  apiVersion: '2025-12-15.clover',
-  timeout: 30000, // 30 second timeout
-  maxNetworkRetries: 3,
-})
 
 // GET /api/metrics - Fetch metrics for user's workspace
 export async function GET(request: NextRequest) {
@@ -46,7 +39,7 @@ export async function GET(request: NextRequest) {
       )
     ])
 
-    const { data: { user }, error: userError } = userResult as any
+    const { data: { user }, error: userError } = userResult as Awaited<ReturnType<typeof supabase.auth.getUser>>
 
     if (userError) {
       logError(handleApiError(userError), { endpoint: 'metrics', operation: 'getUser' })
@@ -241,7 +234,7 @@ export async function POST(request: NextRequest) {
       )
     ])
 
-    const { data: { user }, error: userError } = userResult as any
+    const { data: { user }, error: userError } = userResult as Awaited<ReturnType<typeof supabase.auth.getUser>>
 
     if (userError) {
       logError(handleApiError(userError), { endpoint: 'metrics', operation: 'calculate' })
@@ -354,7 +347,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function calculateMetricsFromStripe(workspaceId: string, supabase: any) {
+async function calculateMetricsFromStripe(workspaceId: string, supabase: Awaited<ReturnType<typeof createServerComponentClient>>) {
   let stripeClient: Stripe | null = null
 
   try {
@@ -490,8 +483,8 @@ async function calculateMetricsFromStripe(workspaceId: string, supabase: any) {
 
       // Count customers with active subscriptions
       activeCustomers = customersResponse.data.filter(customer => {
-        const subscriptions = customer.subscriptions as any
-        return subscriptions?.data?.some((sub: any) =>
+        const subscriptions = customer.subscriptions as { data?: Stripe.Subscription[] }
+        return subscriptions?.data?.some((sub: Stripe.Subscription) =>
           ['active', 'trialing'].includes(sub.status)
         ) || false
       }).length

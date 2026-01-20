@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useLayoutEffect, useRef } from 'react'
 
 interface NetworkStatus {
   isOnline: boolean
@@ -29,6 +29,7 @@ interface NavigatorExtended extends Navigator {
 }
 
 export function useNetworkStatus(): NetworkStatusHook {
+  const hasInitialized = useRef(false)
   const [status, setStatus] = useState<NetworkStatus>({
     isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
     isSlowConnection: false,
@@ -78,7 +79,7 @@ export function useNetworkStatus(): NetworkStatusHook {
       }))
 
       return isConnected
-    } catch (error) {
+    } catch {
       setStatus(prev => ({
         ...prev,
         isOnline: false,
@@ -149,11 +150,11 @@ export function useNetworkStatus(): NetworkStatusHook {
     // Connection change events (Network Information API)
     const navigatorExt = navigator as NavigatorExtended
     if (navigatorExt.connection) {
-      const handleConnectionChange = () => updateConnectionInfo()
+      const handleConnectionChange = () => {
+        // Use setTimeout to avoid synchronous state updates in effects
+        setTimeout(updateConnectionInfo, 0)
+      }
       navigatorExt.connection.addEventListener('change', handleConnectionChange)
-
-      // Initial connection info
-      updateConnectionInfo()
 
       return () => {
         if (navigatorExt.connection) {
@@ -162,23 +163,40 @@ export function useNetworkStatus(): NetworkStatusHook {
       }
     }
 
-    // Periodic connectivity checks (every 30 seconds when online)
-    const interval = setInterval(() => {
-      if (status.isOnline) {
-        checkConnection()
-      }
-    }, 30000)
-
     return () => {
       window.removeEventListener('online', handleOnline)
       window.removeEventListener('offline', handleOffline)
-      clearInterval(interval)
     }
-  }, [updateConnectionInfo, checkConnection, status.isOnline])
+  }, [updateConnectionInfo])
+
+  // Periodic connectivity checks (every 30 seconds when online)
+  useEffect(() => {
+    if (!status.isOnline) return
+
+    const interval = setInterval(() => {
+      checkConnection()
+    }, 30000)
+
+    return () => clearInterval(interval)
+  }, [status.isOnline, checkConnection])
 
   // Initial connectivity check
   useEffect(() => {
-    checkConnection()
+    // Use a timeout to defer the initial check and avoid synchronous state updates
+    const timeoutId = setTimeout(() => {
+      checkConnection()
+    }, 0)
+
+    return () => clearTimeout(timeoutId)
+  }, [checkConnection])
+
+  // Initial connectivity check
+  useLayoutEffect(() => {
+    if (!hasInitialized.current) {
+      hasInitialized.current = true
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      checkConnection()
+    }
   }, [checkConnection])
 
   return {
