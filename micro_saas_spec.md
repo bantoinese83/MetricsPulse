@@ -5,7 +5,7 @@
 
 ## Executive Summary
 
-**MetricsPulse** is a lightweight, specialized analytics dashboard that aggregates and visualizes critical SaaS metrics from Stripe, Google Analytics, and email platforms in a single dashboard. 
+**MetricsPulse** is a lightweight, specialized analytics dashboard that aggregates and visualizes critical SaaS metrics from Stripe, Google Analytics, and email platforms in a single dashboard.
 
 **Why This Idea Works:**
 - ✅ **Validated demand:** Baremetrics built $1M+ ARR solving this exact problem
@@ -51,7 +51,7 @@ MetricsPulse answers: **"What are my 3 numbers TODAY that tell me if my SaaS is 
 3. **Manual Input** - CAC, ad spend, email subscribers (form-based)
 
 #### Authentication & User Management
-- Email/password signup (Clerk handles complexity)
+- Email/password signup (Supabase Auth handles complexity)
 - Free trial: 14 days, unlimited access
 - Workspace creation: single workspace per account (expandable later)
 
@@ -87,14 +87,14 @@ MetricsPulse answers: **"What are my 3 numbers TODAY that tell me if my SaaS is 
   - SSR for SEO-friendly dashboard
   - Server components for auth-gated routes
   - API routes for serverless webhooks
-  
+
 - **UI Library:** shadcn/ui + TailwindCSS
   - Pre-built chart components (Recharts for charts)
   - Button, input, modal, table components ready to use
-  
+
 - **State Management:** React hooks + TanStack Query
   - Real-time data fetching & caching
-  
+
 - **Charts:** Recharts (lightweight, React-native)
   - Line charts, bar charts, status cards
 
@@ -105,19 +105,19 @@ MetricsPulse answers: **"What are my 3 numbers TODAY that tell me if my SaaS is 
   - Stripe webhook handler (`/api/webhooks/stripe`)
   - Metric calculation endpoints
   - Third-party integrations (Google Analytics, Stripe)
-  
+
 - **Database:** Supabase (PostgreSQL)
   - Schema: users, workspaces, connections, metrics, alerts
   - Row-level security (RLS) for multi-tenant safety
-  
+
 - **ORM:** Prisma
   - Type-safe database queries
   - Migration management
-  
-- **Authentication:** Clerk
+
+- **Authentication:** Supabase Auth
   - Handles JWT tokens, OAuth (Google, GitHub)
   - Zero custom auth code
-  
+
 - **File Storage:** Supabase Storage (for CSV/PDF exports)
 
 ### External Services
@@ -130,10 +130,9 @@ MetricsPulse answers: **"What are my 3 numbers TODAY that tell me if my SaaS is 
 ### Database Schema (Supabase)
 
 ```sql
--- Users table (managed by Clerk, reference via clerk_id)
+-- Users table (managed by Supabase Auth, reference via auth.uid())
 CREATE TABLE users (
-  id UUID PRIMARY KEY,
-  clerk_id TEXT UNIQUE NOT NULL,
+  id UUID PRIMARY KEY REFERENCES auth.users(id),
   email TEXT NOT NULL,
   created_at TIMESTAMP DEFAULT NOW()
 );
@@ -198,7 +197,7 @@ CREATE TABLE subscriptions (
 ### Days 1–2: Project Setup & Auth
 - [ ] Initialize Next.js 14 project with Vercel deployment
 - [ ] Set up Supabase project + database schema
-- [ ] Integrate Clerk for authentication
+- [ ] Integrate Supabase Auth for authentication
 - [ ] Create `AuthGuard` middleware for protected routes
 - [ ] Build login/signup pages
 
@@ -291,11 +290,7 @@ CREATE TABLE subscriptions (
 ## Deployment Instructions (Cursor AI Optimized)
 
 ### Environment Variables (`.env.local`)
-```
-# Clerk
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
-CLERK_SECRET_KEY=sk_test_...
-
+```env
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
@@ -317,7 +312,6 @@ GOOGLE_CLIENT_SECRET=xxx
 1. **Create accounts:**
    - Vercel.com → connect GitHub repo
    - Supabase.com → create project
-   - Clerk.com → create app
    - Stripe.com → create account → setup OAuth app
 
 2. **Deploy:**
@@ -345,7 +339,8 @@ GOOGLE_CLIENT_SECRET=xxx
 ## API Endpoints (Cursor AI Quick Reference)
 
 ### Auth
-- `POST /api/auth/clerk/webhook` - Clerk webhook for user creation
+- `POST /api/auth/supabase/callback` - Supabase auth callback
+- `GET /api/auth/user` - Get current user
 
 ### Workspace & Connections
 - `POST /api/workspace` - Create workspace
@@ -409,14 +404,14 @@ GOOGLE_CLIENT_SECRET=xxx
 
 ## Risk Mitigation
 
-| Risk | Mitigation |
-|------|-----------|
-| **Stripe API rate limits** | Cache metrics for 6 hours, batch requests |
-| **User data privacy** | Supabase RLS + encryption for OAuth tokens |
-| **Payment failure** | Stripe webhook retries, fallback email alerts |
-| **Cold start problem (no users)** | Launch on ProductHunt + Indie Hackers day 1 |
-| **Churn (retention)** | Daily email digest keeps product top-of-mind |
-| **Feature bloat** | Ruthless no: only ship if 3+ users request it |
+ Risk | Mitigation
+------|-----------
+ **Stripe API rate limits** | Cache metrics for 6 hours, batch requests |
+ **User data privacy** | Supabase RLS + encryption for OAuth tokens |
+ **Payment failure** | Stripe webhook retries, fallback email alerts |
+ **Cold start problem (no users)** | Launch on ProductHunt + Indie Hackers day 1 |
+ **Churn (retention)** | Daily email digest keeps product top-of-mind |
+ **Feature bloat** | Ruthless no: only ship if 3+ users request it |
 
 ---
 
@@ -445,7 +440,7 @@ GOOGLE_CLIENT_SECRET=xxx
 1. **Clone boilerplate:** https://github.com/pixegami/task-app (use as reference for Next.js + Supabase structure)
 2. **Set up GitHub repo** with this spec as README
 3. **Create Vercel project** linked to GitHub (auto-deploy on push)
-4. **Day 1:** Initialize Next.js + Clerk + Supabase, deploy empty dashboard
+4. **Day 1:** Initialize Next.js + Supabase Auth + Supabase, deploy empty dashboard
 5. **Day 5:** Get first Stripe data flowing
 6. **Day 14:** Launch 🚀
 

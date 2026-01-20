@@ -27,7 +27,6 @@ MetricsPulse is a lightweight, specialized analytics dashboard that aggregates a
 
 - Node.js 18+
 - Supabase account
-- Clerk account
 - Stripe account
 - Google Analytics 4 property
 
@@ -51,10 +50,6 @@ MetricsPulse is a lightweight, specialized analytics dashboard that aggregates a
 
    Fill in your environment variables:
    ```env
-   # Clerk Authentication
-   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
-   CLERK_SECRET_KEY=sk_test_...
-
    # Supabase
    NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
    NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
@@ -72,10 +67,6 @@ MetricsPulse is a lightweight, specialized analytics dashboard that aggregates a
 
 4. **Database Setup**
    ```bash
-   # Initialize Supabase
-   npx supabase init
-   npx supabase start
-
    # Run Prisma migrations
    npx prisma migrate dev --name init
    ```
@@ -100,7 +91,7 @@ Visit `http://localhost:3000` to see your dashboard!
 - **API**: Next.js API Routes
 - **Database**: Supabase (PostgreSQL)
 - **ORM**: Prisma
-- **Auth**: Clerk
+- **Auth**: Supabase Auth
 - **Storage**: Supabase Storage
 
 ### External Services

@@ -1,0 +1,105 @@
+// MetricsPulse Database Schema
+// SaaS Analytics Dashboard for Founders
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Users table (managed by Supabase Auth, reference via auth.uid())
+model User {
+  id        String   @id @default(cuid())
+  email     String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  workspaces   Workspace[]
+  subscriptions Subscription[]
+
+  @@map("users")
+}
+
+// Workspaces (one per user initially)
+model Workspace {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  name      String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  connections Connection[]
+  metrics     Metric[]
+  thresholds  AlertThreshold[]
+
+  @@map("workspaces")
+}
+
+// OAuth Connections
+model Connection {
+  id           String   @id @default(cuid())
+  workspaceId  String   @map("workspace_id")
+  provider     String   // 'stripe' | 'google_analytics' | 'manual'
+  accessToken  String?  @map("access_token")
+  refreshToken String?  @map("refresh_token")
+  connectedAt  DateTime? @map("connected_at")
+  expiresAt    DateTime? @map("expires_at")
+  metadata     Json?    // store provider-specific data (account ID, etc.)
+
+  // Relations
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("connections")
+}
+
+// Metrics table (time-series data)
+model Metric {
+  id          String   @id @default(cuid())
+  workspaceId String   @map("workspace_id")
+  metricName  String   @map("metric_name") // 'mrr' | 'churn_rate' | 'cac' | 'ltv' | ...
+  value       Decimal?
+  recordedAt  DateTime @map("recorded_at")
+
+  // Relations
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  // Constraints
+  @@unique([workspaceId, metricName, recordedAt])
+  @@map("metrics")
+}
+
+// Alert thresholds
+model AlertThreshold {
+  id           String   @id @default(cuid())
+  workspaceId  String   @map("workspace_id")
+  metricName   String   @map("metric_name")
+  minValue     Decimal? @map("min_value")
+  maxValue     Decimal? @map("max_value")
+  alertChannel String   @map("alert_channel") // 'email' | 'slack'
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  // Relations
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("alert_thresholds")
+}
+
+// Subscription data (for billing)
+model Subscription {
+  id                   String   @id @default(cuid())
+  userId               String   @map("user_id")
+  stripeSubscriptionId String?  @map("stripe_subscription_id")
+  plan                 String   // 'free' | 'pro' | 'enterprise'
+  status               String   // 'active' | 'cancelled' | 'past_due'
+  currentPeriodEnd     DateTime? @map("current_period_end")
+  createdAt            DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
+}
